@@ -72,7 +72,8 @@
 .main-container {
   max-width: 960px;
   margin: 0 auto;
-  padding-bottom: 75px;
+  padding: 12px 12px 90px;
+  min-height: calc(100vh - 90px);
 }
 .card-list { 
   display: flex;
