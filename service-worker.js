@@ -1,9 +1,13 @@
-const CACHE_NAME = 'uni-v1.0.5';
+const CACHE_NAME = 'uni-v1.0.6';
 const ASSETS = [
   '/',
   '/index.html',
-  '/styles.css',
-  '/script.js',
+  '/css/base.css',
+  '/css/sns.css',
+  '/css/vocab.css',
+  '/js/base.js',
+  '/js/sns.js',
+  '/js/vocab.js',
   '/manifest.json',
   '/img/icon-192.png',
   '/img/icon-512.png',

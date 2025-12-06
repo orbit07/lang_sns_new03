@@ -1,28 +1,3 @@
-function ensureVocabularyFields(data) {
-  if (!Array.isArray(data.vocabularyCards)) {
-    data.vocabularyCards = [];
-    return;
-  }
-
-  data.vocabularyCards = data.vocabularyCards.map((card) => {
-    const back = Array.isArray(card.back) ? card.back : (card.content ? [card.content] : []);
-    const tags = Array.isArray(card.tags) ? card.tags : [];
-    const speaker = card.speaker || card.speaker_type || 'none';
-    return {
-      front: '',
-      note: '',
-      rememberCount: 0,
-      nextReviewAt: null,
-      updatedAt: card.updatedAt || card.createdAt || Date.now(),
-      ...card,
-      back,
-      tags,
-      speaker,
-      speaker_type: speaker,
-    };
-  });
-}
-
 let activeTextMenu = null;
 
 function closeTextContextMenu() {
