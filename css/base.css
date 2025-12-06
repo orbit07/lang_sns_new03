@@ -37,18 +37,20 @@ button {
 }
 
 .view-switcher {
-  position: sticky;
+  position: fixed;
   top: 0;
   z-index: 12;
-  display: flex;
-  gap: 8px;
-  padding: 12px 12px 4px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.55) 100%);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(10px);
 }
 
 .view-tab {
-  padding: 10px 14px;
+  height: 40px;
   border: 1px solid var(--border);
   background: #fff;
   color: var(--muted);
