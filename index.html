@@ -102,7 +102,18 @@
   </div>
 
   <div id="vocabulary" class="app-view">
-    <section class="vocabulary-panel">
+
+    <header class="vocabulary-app-header">
+      <nav class="vocabulary-tabs">
+        <button data-tab="vocabulary-today" class="tab-button vocabulary-tab-button-today active">本日のカード</button>
+        <button data-tab="vocabulary-search" class="tab-button vocabulary-tab-button-search">検索</button>
+        <button id="vocabulary-fab-new-post" class="vocabulary-fab-button" aria-label="新規投稿">＋</button>
+        <button data-tab="vocabulary-all" class="tab-button vocabulary-tab-button-all">すべてのカード</button>
+        <button data-tab="vocabulary-import" class="tab-button vocabulary-tab-button-import">その他</button>
+      </nav>
+    </header>
+
+    <section id="vocabulary-today" class="vocabulary-tab-panel vocabulary-today-panel">
       <div class="vocabulary-header">
         <div class="vocabulary-summary">
           <div class="vocabulary-stat">
@@ -115,9 +126,19 @@
           </div>
         </div>
       </div>
+      <div class="vocabulary-section" id="vocabulary-review-section">
+        <div class="vocabulary-section-header">
+          <h3>今日のカード</h3>
+          <span class="pill" id="vocabulary-review-badge">0</span>
+        </div>
+        <div id="vocabulary-review-list" class="vocabulary-list"></div>
+      </div>
+    </section>
 
-      <div class="vocabulary-controls">
+    <section id="vocabulary-search" class="vocabulary-tab-panel vocabulary-search-panel">
+      <div class="vocabulary-search-box">
         <input id="vocabulary-search" type="search" placeholder="表・裏を検索" />
+        <button id="vocabulary-search-btn" class="vocabulary-primary-button vocabulary-search-button">Search</button>
         <select id="vocabulary-lang-filter">
           <option value="">言語フィルタ</option>
           <option value="en-US">英語</option>
@@ -138,26 +159,14 @@
           <option value="created">追加順</option>
           <option value="next">次の出題が近い順</option>
         </select>
-        <label class="vocabulary-checkbox">
-          <input type="checkbox" id="vocabulary-show-archived" /> アーカイブも表示
-        </label>
       </div>
-
-      <div class="vocabulary-section" id="vocabulary-review-section">
-        <div class="vocabulary-section-header">
-          <h3>今日のカード</h3>
-          <span class="pill" id="vocabulary-review-badge">0</span>
-        </div>
-        <div id="vocabulary-review-list" class="vocabulary-list"></div>
-      </div>
-
-      <div class="vocabulary-section">
-        <div class="vocabulary-section-header">
-          <h3>すべてのカード</h3>
-        </div>
-        <div id="vocabulary-list" class="vocabulary-list"></div>
-      </div>
+      <div id="search-results" class="card-list"></div>
     </section>
+
+    <section id="vocabulary-all" class="vocabulary-tab-panel vocabulary-all-panel">
+      <div id="vocabulary-list" class="vocabulary-list"></div>
+    </section>
+
   </div>
 
   <script src="js/base.js"></script>
