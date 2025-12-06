@@ -38,6 +38,54 @@
   align-items: center;
 }
 
+.vocabulary-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 4px 0 18px;
+}
+
+.vocabulary-controls input,
+.vocabulary-controls select {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #d7dbe4;
+  background: #fff;
+}
+
+.vocabulary-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.vocabulary-section {
+  margin-bottom: 24px;
+}
+
+.vocabulary-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 12px;
+}
+
+.vocabulary-section-header h3 {
+  margin: 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f6ff;
+  color: #1f7aee;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
 .vocabulary-stat {
   background: #fff;
   padding: 10px 14px;
@@ -95,6 +143,61 @@
   border-radius: 10px;
 }
 
+.vocabulary-schedule { color: var(--muted); font-size: 1.3rem; display: flex; gap: 10px; flex-wrap: wrap; }
+
+.vocabulary-back-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vocabulary-back-item {
+  list-style: disc;
+}
+
+.vocabulary-back-item .text-label {
+  margin-right: 6px;
+}
+
+.vocabulary-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef2f8;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inline-form-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.inline-form-row input,
+.inline-form-row select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d7dbe4;
+}
+
+.inline-form-row button {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f4f6fa;
+  border: 1px solid #d7dbe4;
+}
+
 .vocabulary-highlight {
   outline: 3px solid #1f7aee;
   outline-offset: 2px;
@@ -138,4 +241,10 @@
 .context-menu-helper {
   color: var(--muted);
   font-size: 1.2rem;
+}
+
+.context-menu-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }

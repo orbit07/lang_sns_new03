@@ -46,20 +46,46 @@ function ensureVocabularyFields(data) {
   }
 
   data.vocabularyCards = data.vocabularyCards.map((card) => {
-    const back = Array.isArray(card.back) ? card.back : (card.content ? [card.content] : []);
-    const tags = Array.isArray(card.tags) ? card.tags : [];
-    const speaker = card.speaker || card.speaker_type || 'none';
+    const inferSpeaker = card.speaker || card.speaker_type || 'none';
+    const normalizeBack = (entry) => {
+      if (typeof entry === 'string') {
+        return {
+          content: entry,
+          language: card.language || '',
+          pronunciation: card.pronunciation || null,
+          speaker: inferSpeaker,
+        };
+      }
+      return {
+        content: entry?.content || '',
+        language: entry?.language || '',
+        pronunciation: entry?.pronunciation || entry?.note || null,
+        speaker: entry?.speaker || inferSpeaker,
+        fromPostId: entry?.fromPostId || card.postId || null,
+        textIndex: entry?.textIndex ?? null,
+      };
+    };
+
+    const backArray = Array.isArray(card.back)
+      ? card.back.map(normalizeBack).filter((b) => b.content?.trim().length)
+      : card.content
+        ? [normalizeBack(card.content)]
+        : [];
+
+    const nextReviewDate = card.nextReviewDate || card.nextReviewAt || null;
+    const id = typeof card.id === 'number' ? card.id : nextId();
+    const createdAt = card.createdAt || Date.now();
     return {
-      front: '',
-      note: '',
-      rememberCount: 0,
-      nextReviewAt: null,
-      updatedAt: card.updatedAt || card.createdAt || Date.now(),
-      ...card,
-      back,
-      tags,
-      speaker,
-      speaker_type: speaker,
+      id,
+      fromPostId: card.fromPostId ?? card.postId ?? null,
+      frontSource: card.frontSource || (card.postId ? { postId: card.postId, textIndex: card.textIndex ?? null } : null),
+      front: card.front || '',
+      back: backArray,
+      rememberCount: Number(card.rememberCount || 0),
+      nextReviewDate: nextReviewDate || null,
+      isArchived: Boolean(card.isArchived),
+      createdAt,
+      updatedAt: card.updatedAt || createdAt,
     };
   });
 }

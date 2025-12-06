@@ -116,7 +116,47 @@
         </div>
       </div>
 
-      <div id="vocabulary-list" class="vocabulary-list"></div>
+      <div class="vocabulary-controls">
+        <input id="vocabulary-search" type="search" placeholder="表・裏を検索" />
+        <select id="vocabulary-lang-filter">
+          <option value="">言語フィルタ</option>
+          <option value="en-US">英語</option>
+          <option value="ko-KR">韓国語</option>
+          <option value="zh-TW">台湾華語</option>
+          <option value="ja">日本語</option>
+        </select>
+        <select id="vocabulary-speaker-filter">
+          <option value="">話者フィルタ</option>
+          <option value="me">わたし</option>
+          <option value="friend">友だち</option>
+          <option value="staff">店員</option>
+          <option value="other">その他</option>
+          <option value="none">未指定</option>
+        </select>
+        <select id="vocabulary-sort">
+          <option value="updated">更新順</option>
+          <option value="created">追加順</option>
+          <option value="next">次の出題が近い順</option>
+        </select>
+        <label class="vocabulary-checkbox">
+          <input type="checkbox" id="vocabulary-show-archived" /> アーカイブも表示
+        </label>
+      </div>
+
+      <div class="vocabulary-section" id="vocabulary-review-section">
+        <div class="vocabulary-section-header">
+          <h3>今日のカード</h3>
+          <span class="pill" id="vocabulary-review-badge">0</span>
+        </div>
+        <div id="vocabulary-review-list" class="vocabulary-list"></div>
+      </div>
+
+      <div class="vocabulary-section">
+        <div class="vocabulary-section-header">
+          <h3>すべてのカード</h3>
+        </div>
+        <div id="vocabulary-list" class="vocabulary-list"></div>
+      </div>
     </section>
   </div>
 
