@@ -1,5 +1,6 @@
 let activeTextMenu = null;
 let vocabularyControlsReady = false;
+let vocabularyTabsReady = false;
 
 function closeTextContextMenu() {
   if (activeTextMenu?.handler) {
@@ -89,6 +90,22 @@ function createVocabularyCard(front, { post, textIndex }) {
     nextReviewDate: getDateKey(now),
     isArchived: false,
     frontSource: post && typeof textIndex === 'number' ? { postId: post.id, textIndex } : null,
+  };
+}
+
+function createEmptyVocabularyCard() {
+  const now = Date.now();
+  return {
+    id: nextId(),
+    createdAt: now,
+    updatedAt: now,
+    fromPostId: null,
+    frontSource: null,
+    front: '',
+    back: [],
+    rememberCount: 0,
+    nextReviewDate: getDateKey(now),
+    isArchived: false,
   };
 }
 
@@ -310,7 +327,8 @@ function buildEmptyState(message) {
   return empty;
 }
 
-function openVocabularyEditor(card) {
+function openVocabularyEditor(card, options = {}) {
+  const { isNew = false } = options;
   const container = document.createElement('div');
   container.className = 'form-stack';
 
@@ -427,6 +445,9 @@ function openVocabularyEditor(card) {
     card.nextReviewDate = scheduleInput.value || null;
     card.isArchived = archiveInput.checked;
     card.updatedAt = Date.now();
+    if (isNew && !state.data.vocabularyCards.some((c) => c.id === card.id)) {
+      state.data.vocabularyCards.push(card);
+    }
     persistData();
     renderVocabulary();
     closeModal();
@@ -436,6 +457,11 @@ function openVocabularyEditor(card) {
   container.appendChild(footer);
 
   openModal(container, 'カード編集');
+}
+
+function openNewVocabularyCardModal() {
+  const card = createEmptyVocabularyCard();
+  openVocabularyEditor(card, { isNew: true });
 }
 
 function renderVocabularyCard(card) {
@@ -582,3 +608,31 @@ function renderVocabulary() {
   }
   filtered.forEach((card) => list.appendChild(renderVocabularyCard(card)));
 }
+
+function setActiveVocabularyTab(tabName) {
+  state.currentVocabularyTab = tabName;
+  document.querySelectorAll('.vocabulary-tabs .tab-button[data-tab]').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  document.querySelectorAll('.vocabulary-tab-panel').forEach((panel) => {
+    panel.classList.toggle('active', panel.id === tabName);
+  });
+  renderVocabulary();
+}
+
+function setupVocabularyTabs() {
+  if (vocabularyTabsReady) return;
+  vocabularyTabsReady = true;
+  document.querySelectorAll('.vocabulary-tabs .tab-button[data-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => setActiveVocabularyTab(btn.dataset.tab));
+  });
+  const createBtn = document.getElementById('vocabulary-open-create');
+  if (createBtn) {
+    createBtn.addEventListener('click', openNewVocabularyCardModal);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setupVocabularyTabs();
+  setActiveVocabularyTab(state.currentVocabularyTab || 'vocabulary-today');
+});

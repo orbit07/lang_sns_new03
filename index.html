@@ -107,13 +107,13 @@
       <nav class="vocabulary-tabs">
         <button data-tab="vocabulary-today" class="tab-button vocabulary-tab-button-today active">本日のカード</button>
         <button data-tab="vocabulary-search" class="tab-button vocabulary-tab-button-search">検索</button>
-        <button id="vocabulary-fab-new-post" class="vocabulary-fab-button" aria-label="新規投稿">＋</button>
+        <button data-tab="vocabulary-create" class="tab-button vocabulary-tab-button-create">新規投稿（モーダル）</button>
         <button data-tab="vocabulary-all" class="tab-button vocabulary-tab-button-all">すべてのカード</button>
         <button data-tab="vocabulary-import" class="tab-button vocabulary-tab-button-import">その他</button>
       </nav>
     </header>
 
-    <section id="vocabulary-today" class="vocabulary-tab-panel vocabulary-today-panel">
+    <section id="vocabulary-today" class="vocabulary-tab-panel vocabulary-today-panel active">
       <div class="vocabulary-header">
         <div class="vocabulary-summary">
           <div class="vocabulary-stat">
@@ -163,8 +163,31 @@
       <div id="search-results" class="card-list"></div>
     </section>
 
+    <section id="vocabulary-create" class="vocabulary-tab-panel vocabulary-create-panel">
+      <div class="vocabulary-panel">
+        <p class="vocabulary-description">
+          単語カードを自由に作成して、表と複数の裏を保存できます。
+        </p>
+        <button id="vocabulary-open-create" class="primary-button vocabulary-create-button">新規カードを作成</button>
+      </div>
+    </section>
+
     <section id="vocabulary-all" class="vocabulary-tab-panel vocabulary-all-panel">
+      <div class="vocabulary-controls">
+        <label class="vocabulary-checkbox">
+          <input type="checkbox" id="vocabulary-show-archived" />
+          アーカイブも表示
+        </label>
+      </div>
       <div id="vocabulary-list" class="vocabulary-list"></div>
+    </section>
+
+    <section id="vocabulary-import" class="vocabulary-tab-panel vocabulary-import-panel">
+      <div class="vocabulary-panel">
+        <p class="vocabulary-description">
+          インポートやエクスポートはSNSタブにあります。バックアップ前に最新のデータを確認してください。
+        </p>
+      </div>
     </section>
 
   </div>

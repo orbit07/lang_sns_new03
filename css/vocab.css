@@ -1,3 +1,34 @@
+.vocabulary-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+}
+
+.vocabulary-tabs .tab-button {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #d7dbe4;
+  background: #fff;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.vocabulary-tabs .tab-button.active {
+  background: #1f7aee;
+  border-color: #1f7aee;
+  color: #fff;
+}
+
+.vocabulary-tab-panel {
+  display: none;
+  padding: 10px;
+}
+
+.vocabulary-tab-panel.active {
+  display: block;
+}
+
 .vocabulary-panel {
   max-width: 960px;
   margin: 0 auto;
@@ -196,6 +227,10 @@
   border-radius: 8px;
   background: #f4f6fa;
   border: 1px solid #d7dbe4;
+}
+
+.vocabulary-create-panel .vocabulary-panel {
+  padding-top: 20px;
 }
 
 .vocabulary-highlight {

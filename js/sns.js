@@ -453,6 +453,8 @@ function setActiveView(view) {
     panel.classList.toggle('active', panel.id === view);
   });
   if (view === 'vocabulary') {
+    if (typeof setupVocabularyTabs === 'function') setupVocabularyTabs();
+    if (typeof setActiveVocabularyTab === 'function') setActiveVocabularyTab(state.currentVocabularyTab || 'vocabulary-today');
     closeModal();
     closeImageViewer();
     renderVocabulary();
