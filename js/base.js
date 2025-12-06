@@ -16,6 +16,7 @@ const state = {
   data: defaultData(),
   currentTab: 'timeline',
   currentView: 'sns',
+  currentVocabularyTab: 'vocabulary-today',
   imageCache: new Map(),
   dashboardChart: null,
   hasPlayedDashboardAnimation: false,
