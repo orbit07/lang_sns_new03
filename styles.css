@@ -34,6 +34,38 @@ button {
   border-radius: 9999px;
 }
 
+.view-switcher {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  display: flex;
+  gap: 8px;
+  padding: 12px 12px 4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.55) 100%);
+  backdrop-filter: blur(10px);
+}
+
+.view-tab {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--muted);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  min-width: 100px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.view-tab.active {
+  color: #fff;
+  background: linear-gradient(135deg, #3d82f0 0%, #1f7aee 100%);
+  border-color: transparent;
+}
+
+.app-view { display: none; }
+.app-view.active { display: block; }
+
 .icon-inline {
   display: inline-flex;
 }
@@ -695,3 +727,4 @@ button {
 .add-text-button:disabled {
   opacity: .5;
 }
+

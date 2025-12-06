@@ -9,11 +9,13 @@ const defaultData = () => ({
   replies: [],
   images: {},
   lastId: 0,
+  vocabularyCards: [],
 });
 
 const state = {
   data: defaultData(),
   currentTab: 'timeline',
+  currentView: 'sns',
   imageCache: new Map(),
   dashboardChart: null,
   hasPlayedDashboardAnimation: false,
@@ -59,6 +61,7 @@ function createSpeakerIcon({ icon, label }) {
 }
 
 const getLanguageLabel = (value) => langOptions.find((opt) => opt.value === value)?.label || value;
+const getSpeakerLabel = (value) => speakerOptions.find((opt) => opt.value === value)?.label || value || '未指定';
 
 function loadData() {
   try {
@@ -76,6 +79,7 @@ function loadData() {
   }
 
   ensureSpeakerFields(state.data);
+  ensureVocabularyFields(state.data);
 }
 
 function persistData() {
@@ -616,12 +620,30 @@ function getHeatmapColor(count) {
   return '#2F6FE4';
 }
 
-function render() {
-  renderTimeline();
+function setActiveView(view) {
+  state.currentView = view;
+  closeTextContextMenu();
+  document.querySelectorAll('.view-tab').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.view === view);
+  });
+  document.querySelectorAll('.app-view').forEach((panel) => {
+    panel.classList.toggle('active', panel.id === view);
+  });
+  if (view === 'vocabulary') {
+    closeModal();
+    closeImageViewer();
+    renderVocabulary();
+  }
+}
+
+function render(options = {}) {
+  const { focusPostId = null } = options;
+  renderTimeline({ focusPostId });
   runSearch();
   if (state.currentTab === 'dashboard') {
     renderDashboard();
   }
+  renderVocabulary();
 }
 
 function renderDashboard() {
@@ -815,7 +837,7 @@ function renderDashboard() {
 }
 
 
-function renderCardList(container, items, { emptyMessage, highlightImage = false } = {}) {
+function renderCardList(container, items, { emptyMessage, highlightImage = false, focusId = null } = {}) {
   if (container._infiniteObserver) {
     container._infiniteObserver.disconnect();
   }
@@ -825,7 +847,8 @@ function renderCardList(container, items, { emptyMessage, highlightImage = false
     return;
   }
 
-  const initialCount = 50;
+  const focusIndex = focusId != null ? items.findIndex((item) => item.id === focusId) : -1;
+  const initialCount = Math.max(50, focusIndex + 1);
   const batchSize = 20;
   let index = 0;
   let observer = null;
@@ -858,10 +881,10 @@ function renderCardList(container, items, { emptyMessage, highlightImage = false
   container._infiniteObserver = observer;
 }
 
-function renderTimeline() {
+function renderTimeline({ focusPostId = null } = {}) {
   const container = document.getElementById('timeline-list');
   const sorted = [...state.data.posts].sort((a, b) => b.createdAt - a.createdAt);
-  renderCardList(container, sorted, { emptyMessage: '投稿がありません。' });
+  renderCardList(container, sorted, { emptyMessage: '投稿がありません。', focusId: focusPostId });
 }
 
 function renderImages() {
@@ -874,6 +897,7 @@ function renderImages() {
 function renderPostCard(post, options = {}) {
   const template = document.getElementById('post-template');
   const node = template.content.firstElementChild.cloneNode(true);
+  node.dataset.postId = post.id;
   const meta = node.querySelector('.card-meta');
   const body = node.querySelector('.card-body');
   const tagsEl = node.querySelector('.tag-list');
@@ -897,7 +921,7 @@ function renderPostCard(post, options = {}) {
   if (post.isDeleted) {
     body.innerHTML = '<div class="text-block">このポストは削除されました</div>';
   } else {
-    post.texts.forEach((t) => {
+    post.texts.forEach((t, textIndex) => {
       const blockGroup = document.createElement('div');
       blockGroup.className = 'text-block-group';
       const speakerBadge = createSpeakerBadge(t.speaker_type || t.speaker || 'none');
@@ -905,6 +929,8 @@ function renderPostCard(post, options = {}) {
 
       const block = document.createElement('div');
       block.className = 'text-block';
+      block.dataset.postId = post.id;
+      block.dataset.textIndex = textIndex;
       const label = document.createElement('div');
       label.className = 'text-label';
       const languageLabel = getLanguageLabel(t.language);
@@ -931,6 +957,9 @@ function renderPostCard(post, options = {}) {
         pronunciation.className = 'pronunciation';
         pronunciation.textContent = t.pronunciation;
         block.appendChild(pronunciation);
+      }
+      if ((t.content || '').trim().length) {
+        attachVocabularyAction(block, post, textIndex);
       }
       blockGroup.appendChild(block);
       body.appendChild(blockGroup);
@@ -1207,6 +1236,7 @@ function mergeImportedData(incoming) {
   Object.entries(incoming.images || {}).forEach(([id, dataUrl]) => {
     if (!merged.images[id]) merged.images[id] = dataUrl;
   });
+  merged.vocabularyCards = mergeCollections(merged.vocabularyCards, incoming.vocabularyCards || []);
 
   const incomingLastId = Number(incoming.lastId) || 0;
   const maxExistingId = Math.max(
@@ -1220,6 +1250,7 @@ function mergeImportedData(incoming) {
 
   state.data = merged;
   ensureSpeakerFields(state.data);
+  ensureVocabularyFields(state.data);
   persistData();
   render();
 }
@@ -1310,20 +1341,29 @@ function importData(file) {
   reader.readAsText(file);
 }
 
+function setActiveTab(tabName) {
+  state.currentTab = tabName;
+  document.querySelectorAll('.tabs button[data-tab]').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.tab === state.currentTab);
+  });
+  document.querySelectorAll('.tab-panel').forEach((panel) => {
+    panel.classList.toggle('active', panel.id === state.currentTab);
+  });
+  if (state.currentTab === 'dashboard') {
+    renderDashboard();
+  }
+}
+
 function setupTabs() {
   const tabButtons = document.querySelectorAll('.tabs button[data-tab]');
   tabButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      tabButtons.forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.currentTab = btn.dataset.tab;
-      document.querySelectorAll('.tab-panel').forEach((panel) => {
-        panel.classList.toggle('active', panel.id === state.currentTab);
-      });
-      if (state.currentTab === 'dashboard') {
-        renderDashboard();
-      }
-    });
+    btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
+  });
+}
+
+function setupViewSwitcher() {
+  document.querySelectorAll('.view-tab').forEach((btn) => {
+    btn.addEventListener('click', () => setActiveView(btn.dataset.view));
   });
 }
 
@@ -1380,7 +1420,10 @@ function registerServiceWorker() {
 
 function init() {
   loadData();
+  setupViewSwitcher();
   setupTabs();
+  setActiveView(state.currentView);
+  setActiveTab(state.currentTab);
   setupGlobalEvents();
   registerServiceWorker();
   render();
