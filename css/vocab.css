@@ -543,6 +543,70 @@
   border: 1px solid #d7dbe4;
 }
 
+.vocabulary-suggestion-section {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #d7dbe4;
+  border-radius: 12px;
+  background: #f9fbff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vocabulary-suggestion-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.3rem;
+}
+
+.vocabulary-suggestion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vocabulary-suggestion-item {
+  border: 1px solid #e3e7f0;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vocabulary-suggestion-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 1.3rem;
+}
+
+.vocabulary-suggestion-source {
+  font-weight: 600;
+  color: #1f7aee;
+}
+
+.vocabulary-suggestion-text {
+  font-size: 1.5rem;
+  line-height: 1.6;
+}
+
+.vocabulary-suggestion-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vocabulary-suggestion-actions button {
+  padding: 8px 12px;
+  border: 1px solid #d7dbe4;
+  border-radius: 8px;
+  background: #f4f6fa;
+}
+
 .vocabulary-create-panel .vocabulary-panel {
   padding-top: 20px;
 }
