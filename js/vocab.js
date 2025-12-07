@@ -83,6 +83,49 @@ function buildBackEntryFromText(post, textIndex) {
   };
 }
 
+function getRelatedPosts(basePost) {
+  if (!basePost) return [];
+  const rootId = basePost.repostOf || basePost.id;
+  const relatedIds = new Set([basePost.id, rootId]);
+
+  (state.data.posts || []).forEach((p) => {
+    if (p.id === rootId || p.repostOf === rootId) {
+      relatedIds.add(p.id);
+      if (p.repostOf) relatedIds.add(p.repostOf);
+    }
+    if (p.repostOf === basePost.id) {
+      relatedIds.add(p.id);
+    }
+  });
+
+  return (state.data.posts || []).filter((p) => relatedIds.has(p.id));
+}
+
+function collectRelatedTextEntries(basePost) {
+  if (!basePost) return [];
+  return getRelatedPosts(basePost)
+    .flatMap((post) =>
+      (post.texts || [])
+        .map((text, textIndex) => ({ post, text, textIndex }))
+        .filter((item) => (item.text.content || '').trim().length),
+    )
+    .map(({ post, text, textIndex }) => {
+      let sourceLabel = '関連リポスト';
+      if (post.id === basePost.id) sourceLabel = 'このポスト';
+      else if (post.id === basePost.repostOf) sourceLabel = '元ポスト';
+
+      return {
+        postId: post.id,
+        textIndex,
+        content: (text.content || '').trim(),
+        language: text.language || '',
+        pronunciation: text.pronunciation || '',
+        speaker: text.speaker || text.speaker_type || 'none',
+        sourceLabel,
+      };
+    });
+}
+
 function createVocabularyCard(front, { post, textIndex }) {
   const now = Date.now();
   return {
@@ -125,58 +168,22 @@ function createEmptyVocabularyCard() {
   };
 }
 
-function findFrontCard(postId, textIndex) {
-  return (state.data.vocabularyCards || []).find(
-    (card) => card.frontSource?.postId === postId && card.frontSource?.textIndex === textIndex,
-  );
-}
-
 function addFrontFromPost(post, textIndex) {
   if (!post || post.isDeleted) return;
   const text = post.texts?.[textIndex];
   if (!text?.content?.trim()) return;
-  const existing = findFrontCard(post.id, textIndex);
-  if (existing) {
-    focusVocabularyCard(existing);
-    return;
-  }
-
-  const card = createVocabularyCard(text.content.trim(), { post, textIndex });
-  state.data.vocabularyCards.push(card);
-  persistData();
-  renderVocabulary();
-  focusVocabularyCard(card);
-}
-
-function promptFrontSelection(post, skipIndex) {
-  const candidates = (post?.texts || [])
-    .map((t, idx) => ({ ...t, idx }))
-    .filter((t) => t.idx !== skipIndex && (t.content || '').trim().length);
-  if (!candidates.length) {
-    return { front: (prompt('表にしたいテキストを入力してください') || '').trim(), textIndex: null };
-  }
-
-  const guide = candidates
-    .map((t, idx) => `${idx + 1}: ${t.content.trim().slice(0, 40)}`)
-    .join('\n');
-  const raw = prompt(`どのテキストを表にしますか？\n${guide}\n番号を入力（空欄なら手入力）`);
-  if (!raw) return { front: (prompt('表にしたいテキストを入力してください') || '').trim(), textIndex: null };
-  const selected = Number(raw) - 1;
-  if (Number.isInteger(selected) && candidates[selected]) {
-    return { front: candidates[selected].content.trim(), textIndex: candidates[selected].idx };
-  }
-  return { front: (prompt('表にしたいテキストを入力してください') || '').trim(), textIndex: null };
-}
-
-function pickCardForBack(post) {
-  const candidates = (state.data.vocabularyCards || []).filter((card) => card.fromPostId === post.id && !card.isArchived);
-  if (candidates.length === 1) return candidates[0];
-  if (!candidates.length) return null;
-
-  const list = candidates.map((c) => `${c.id}: ${c.front || '（表なし）'}`).join('\n');
-  const answer = prompt(`どのカードに裏を追加しますか？\n${list}`);
-  if (!answer) return null;
-  return candidates.find((c) => String(c.id) === answer.trim()) || null;
+  openVocabularyEditor(
+    {
+      ...createEmptyVocabularyCard(),
+      fromPostId: post.id,
+      front: text.content.trim(),
+      frontLanguage: text.language || '',
+      frontPronunciation: text.pronunciation || '',
+      frontSpeaker: text.speaker || text.speaker_type || 'none',
+      frontSource: { postId: post.id, textIndex },
+    },
+    { isNew: true, relatedPost: post, presetSide: 'front', presetTextIndex: textIndex },
+  );
 }
 
 function addBackFromPost(post, textIndex) {
@@ -184,21 +191,13 @@ function addBackFromPost(post, textIndex) {
   const entry = buildBackEntryFromText(post, textIndex);
   if (!entry || !entry.content.trim()) return;
 
-  let card = pickCardForBack(post);
+  const card = {
+    ...createEmptyVocabularyCard(),
+    fromPostId: post.id,
+    back: [entry],
+  };
 
-  if (!card) {
-    const { front, textIndex: chosenIndex } = promptFrontSelection(post, textIndex);
-    if (!front) return;
-    card = createVocabularyCard(front, { post, textIndex: chosenIndex });
-    state.data.vocabularyCards.push(card);
-  }
-
-  card.back.push(entry);
-  card.updatedAt = Date.now();
-  if (!card.nextReviewDate) card.nextReviewDate = getDateKey(Date.now());
-  persistData();
-  renderVocabulary();
-  focusVocabularyCard(card);
+  openVocabularyEditor(card, { isNew: true, relatedPost: post, presetSide: 'back', presetTextIndex: textIndex });
 }
 
 function focusVocabularyCard(card) {
@@ -410,9 +409,13 @@ function closeVocabularyModal() {
 }
 
 function openVocabularyEditor(card, options = {}) {
-  const { isNew = false } = options;
+  const { isNew = false, relatedPost = null } = options;
   const container = document.createElement('div');
   container.className = 'form-stack';
+
+  let frontSource = card.frontSource || null;
+
+  const relatedEntries = relatedPost ? collectRelatedTextEntries(relatedPost) : [];
 
   const frontLabel = document.createElement('label');
   frontLabel.textContent = '表（状況）';
@@ -420,6 +423,12 @@ function openVocabularyEditor(card, options = {}) {
   frontInput.value = card.front || '';
   frontInput.rows = 2;
   container.append(frontLabel, frontInput);
+
+  frontInput.addEventListener('input', () => {
+    if (!frontInput.value.trim()) {
+      frontSource = null;
+    }
+  });
 
   const frontMetaRow = document.createElement('div');
   frontMetaRow.className = 'inline-form-row front-meta-row';
@@ -452,6 +461,8 @@ function openVocabularyEditor(card, options = {}) {
     card.back.forEach((entry, idx) => {
       const row = document.createElement('div');
       row.className = 'inline-form-row';
+      row.dataset.fromPostId = entry.fromPostId ?? '';
+      row.dataset.textIndex = typeof entry.textIndex === 'number' ? entry.textIndex : '';
 
       const content = document.createElement('input');
       content.type = 'text';
@@ -500,6 +511,86 @@ function openVocabularyEditor(card, options = {}) {
 
   container.append(backWrap, addBackBtn);
 
+  const applyFrontEntry = (entry) => {
+    if (!entry) return;
+    frontInput.value = entry.content || '';
+    frontLang.value = entry.language || '';
+    frontPron.value = entry.pronunciation || '';
+    frontSpeaker.value = entry.speaker || 'none';
+    frontSource = typeof entry.textIndex === 'number' ? { postId: entry.postId, textIndex: entry.textIndex } : null;
+    if (!card.fromPostId && entry.postId) {
+      card.fromPostId = entry.postId;
+    }
+  };
+
+  const addBackEntry = (entry) => {
+    if (!entry) return;
+    card.back.push({
+      content: entry.content || '',
+      language: entry.language || '',
+      pronunciation: entry.pronunciation || '',
+      speaker: entry.speaker || 'none',
+      fromPostId: entry.postId ?? null,
+      textIndex: typeof entry.textIndex === 'number' ? entry.textIndex : null,
+    });
+    if (!card.fromPostId && entry.postId) {
+      card.fromPostId = entry.postId;
+    }
+    renderRows();
+  };
+
+  if (relatedEntries.length) {
+    const suggestionSection = document.createElement('div');
+    suggestionSection.className = 'vocabulary-suggestion-section';
+
+    const suggestionTitle = document.createElement('h4');
+    suggestionTitle.textContent = 'SNSのテキストを利用';
+    const suggestionHint = document.createElement('p');
+    suggestionHint.className = 'vocabulary-suggestion-hint';
+    suggestionHint.textContent = '同じポストやリポストから表・裏を選択するか、手入力してください。';
+
+    const suggestionList = document.createElement('div');
+    suggestionList.className = 'vocabulary-suggestion-list';
+
+    relatedEntries.forEach((entry) => {
+      const item = document.createElement('div');
+      item.className = 'vocabulary-suggestion-item';
+
+      const meta = document.createElement('div');
+      meta.className = 'vocabulary-suggestion-meta';
+      const label = document.createElement('span');
+      label.className = 'vocabulary-suggestion-source';
+      label.textContent = entry.sourceLabel;
+      const lang = document.createElement('span');
+      lang.className = 'text-label';
+      lang.textContent = getLanguageLabel(entry.language);
+      meta.append(label, lang);
+
+      const text = document.createElement('div');
+      text.className = 'vocabulary-suggestion-text';
+      text.textContent = entry.content;
+
+      const actions = document.createElement('div');
+      actions.className = 'vocabulary-suggestion-actions';
+      const setFront = document.createElement('button');
+      setFront.type = 'button';
+      setFront.textContent = '表に設定';
+      setFront.addEventListener('click', () => applyFrontEntry(entry));
+
+      const addBack = document.createElement('button');
+      addBack.type = 'button';
+      addBack.textContent = '裏に追加';
+      addBack.addEventListener('click', () => addBackEntry(entry));
+
+      actions.append(setFront, addBack);
+      item.append(meta, text, actions);
+      suggestionList.appendChild(item);
+    });
+
+    suggestionSection.append(suggestionTitle, suggestionHint, suggestionList);
+    container.appendChild(suggestionSection);
+  }
+
   const scheduleLabel = document.createElement('label');
   scheduleLabel.textContent = '次の出題日';
   const scheduleInput = document.createElement('input');
@@ -528,27 +619,67 @@ function openVocabularyEditor(card, options = {}) {
   save.textContent = '保存';
   save.addEventListener('click', () => {
     const front = frontInput.value.trim();
+    const frontLangValue = frontLang.value || '';
+    const frontSpeakerValue = frontSpeaker.value || '';
     const rows = Array.from(backWrap.querySelectorAll('.inline-form-row'));
-    const back = rows
-      .map((row) => ({
-        content: row.querySelector('[data-field="content"]')?.value.trim() || '',
-        language: row.querySelector('[data-field="language"]')?.value || '',
-        pronunciation: row.querySelector('[data-field="pronunciation"]')?.value || '',
-        speaker: row.querySelector('[data-field="speaker"]')?.value || 'none',
-      }))
-      .filter((entry) => entry.content.trim().length);
-    if (!front && !back.length) {
-      alert('表か裏を入力してください。');
+    const back = [];
+
+    if (!front) {
+      alert('表のテキストを入力してください。');
       return;
     }
+    if (!frontLangValue) {
+      alert('表の言語を選択してください。');
+      return;
+    }
+    if (!frontSpeakerValue) {
+      alert('表のスピーカーを選択してください。');
+      return;
+    }
+
+    for (const row of rows) {
+      const content = row.querySelector('[data-field="content"]')?.value.trim() || '';
+      const language = row.querySelector('[data-field="language"]')?.value || '';
+      const pronunciation = row.querySelector('[data-field="pronunciation"]')?.value || '';
+      const speaker = row.querySelector('[data-field="speaker"]')?.value || '';
+      const fromPostId = row.dataset.fromPostId ? Number(row.dataset.fromPostId) : null;
+      const textIndex = row.dataset.textIndex ? Number(row.dataset.textIndex) : null;
+
+      if (!content && !language && !speaker && !pronunciation) continue;
+      if (!content) {
+        alert('裏のテキストを入力してください。');
+        return;
+      }
+      if (!language) {
+        alert('裏の言語を選択してください。');
+        return;
+      }
+      if (!speaker) {
+        alert('裏のスピーカーを選択してください。');
+        return;
+      }
+
+      back.push({ content, language, pronunciation, speaker, fromPostId, textIndex });
+    }
+
+    if (!back.length) {
+      alert('少なくとも1つ裏の表現を追加してください。');
+      return;
+    }
+
     card.front = front;
-    card.frontLanguage = frontLang.value || '';
+    card.frontLanguage = frontLangValue;
     card.frontPronunciation = frontPron.value.trim() || '';
-    card.frontSpeaker = frontSpeaker.value || 'none';
+    card.frontSpeaker = frontSpeakerValue;
+    card.frontSource = frontSource;
     card.back = back;
     card.nextReviewDate = scheduleInput.value || null;
     card.isArchived = archiveInput.checked;
     card.updatedAt = Date.now();
+    if (!card.fromPostId) {
+      const backSource = back.find((entry) => entry.fromPostId)?.fromPostId;
+      card.fromPostId = frontSource?.postId || backSource || null;
+    }
     if (isNew && !state.data.vocabularyCards.some((c) => c.id === card.id)) {
       state.data.vocabularyCards.push(card);
     }
@@ -560,7 +691,7 @@ function openVocabularyEditor(card, options = {}) {
   footer.append(cancel, save);
   container.appendChild(footer);
 
-  openVocabularyModal(container, 'カード編集');
+  openVocabularyModal(container, isNew ? 'カード作成' : 'カード編集');
 }
 
 function openNewVocabularyCardModal() {
@@ -941,6 +1072,10 @@ function renderVocabulary() {
 }
 
 function setActiveVocabularyTab(tabName) {
+  if (tabName === 'vocabulary-create') {
+    openNewVocabularyCardModal();
+    tabName = state.currentVocabularyTab || 'vocabulary-today';
+  }
   state.currentVocabularyTab = tabName;
   document.querySelectorAll('.vocabulary-tabs .tab-button[data-tab]').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
