@@ -391,6 +391,24 @@ function renderVocabularySummary() {
   if (progressEl) progressEl.textContent = `${shownIndex} / ${todayTotal}`;
 }
 
+function openVocabularyModal(content, title = 'カード編集') {
+  const modal = document.getElementById('vocabulary-modal');
+  const body = document.getElementById('vocabulary-modal-body');
+  const titleEl = document.getElementById('vocabulary-modal-title');
+  if (!modal || !body || !titleEl) return;
+
+  titleEl.textContent = title;
+  body.innerHTML = '';
+  body.appendChild(content);
+  showModalElement(modal);
+}
+
+function closeVocabularyModal() {
+  const modal = document.getElementById('vocabulary-modal');
+  if (!modal || modal.classList.contains('hidden')) return;
+  hideModalElement(modal);
+}
+
 function openVocabularyEditor(card, options = {}) {
   const { isNew = false } = options;
   const container = document.createElement('div');
@@ -502,7 +520,7 @@ function openVocabularyEditor(card, options = {}) {
   const cancel = document.createElement('button');
   cancel.type = 'button';
   cancel.textContent = 'キャンセル';
-  cancel.addEventListener('click', () => closeModal());
+  cancel.addEventListener('click', () => closeVocabularyModal());
 
   const save = document.createElement('button');
   save.type = 'button';
@@ -536,13 +554,13 @@ function openVocabularyEditor(card, options = {}) {
     }
     persistData();
     renderVocabulary();
-    closeModal();
+    closeVocabularyModal();
   });
 
   footer.append(cancel, save);
   container.appendChild(footer);
 
-  openModal(container, 'カード編集');
+  openVocabularyModal(container, 'カード編集');
 }
 
 function openNewVocabularyCardModal() {
@@ -945,7 +963,21 @@ function setupVocabularyTabs() {
   }
 }
 
+function setupVocabularyModal() {
+  const modal = document.getElementById('vocabulary-modal');
+  if (!modal || modal.dataset.bound) return;
+  modal.dataset.bound = 'true';
+
+  const closeBtn = document.getElementById('vocabulary-modal-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeVocabularyModal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target.id === 'vocabulary-modal') closeVocabularyModal();
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  setupVocabularyModal();
   setupVocabularyTabs();
   setActiveVocabularyTab(state.currentVocabularyTab || 'vocabulary-today');
 });
