@@ -1,28 +1,77 @@
+.vocabulary-app-header {
+  position: fixed;
+  bottom: 0;
+  background: rgba(255, 255, 255, .5);
+  padding: 10px 15px 20px;
+  z-index: 10;
+  width: 100%;
+  backdrop-filter: blur(10px);
+}
 .vocabulary-tabs {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
-  padding: 10px;
+  justify-content: space-evenly;
 }
-
-.vocabulary-tabs .tab-button {
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid #d7dbe4;
-  background: #fff;
-  color: var(--muted);
-  font-weight: 700;
-}
-
-.vocabulary-tabs .tab-button.active {
-  background: #1f7aee;
-  border-color: #1f7aee;
+.vocabulary-tab-button-create {
+  right: 20px;
+  bottom: 80px;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  border: none;
+  background: #57a8ff;
   color: #fff;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  font-size: 3rem;
+  margin-top: -20px;
+  font-weight: 600;
+  text-align: center;
+}
+.vocabulary-tab-button-today {
+  height: 30px;
+  width: 60px;
+  background: url(../img/today_off.svg) no-repeat center;
+  background-size: 40%;
+}
+.vocabulary-tab-button-today.active {
+  background: url(../img/today_on.svg) no-repeat center;
+  background-size: 40%;
+}
+.vocabulary-tab-button-search {
+  height: 30px;
+  width: 60px;
+  background: url(../img/search_off.svg) no-repeat center;
+  background-size: 40%;
+}
+.vocabulary-tab-button-search.active {
+  background: url(../img/search_on.svg) no-repeat center;
+  background-size: 40%;
+}
+.vocabulary-tab-button-all {
+  height: 30px;
+  width: 60px;
+  background: url(../img/all_off.svg) no-repeat center;
+  background-size: 40%;
+}
+.vocabulary-tab-button-all.active {
+  background: url(../img/all_on.svg) no-repeat center;
+  background-size: 40%;
+}
+.vocabulary-tab-button-import {
+  height: 30px;
+  width: 60px;
+  background: url(../img/img_off.svg) no-repeat center;
+  background-size: 40%;
+}
+.vocabulary-tab-button-import.active {
+  background: url(../img/img_on.svg) no-repeat center;
+  background-size: 40%;
 }
 
 .vocabulary-tab-panel {
   display: none;
-  padding: 10px;
+  padding: 46px 0 0;
 }
 
 .vocabulary-tab-panel.active {
@@ -56,6 +105,33 @@
 .vocabulary-title {
   font-size: 2.4rem;
   margin: 0 0 4px;
+}
+
+.vocabulary-search-box {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 5px;
+  position: fixed;
+  padding: 10px;
+  min-width: 100%;
+  top: 46px;
+  left: 0;
+  background: rgba(255, 255, 255, .8);
+  backdrop-filter: blur(10px);
+  z-index: 999;
+}
+.vocabulary-search {
+  flex: 1;
+  padding: 5px;
+  border-radius: 10px;
+  border: 1px solid #57a8ff;
+}
+.vocabulary-search-button {
+  width: fit-content;
+  padding: 0 20px;
+  background: #57a8ff;
+  color: #fff;
+  border: 1px solid #57a8ff;
 }
 
 .vocabulary-description {
