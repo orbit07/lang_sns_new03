@@ -24,9 +24,13 @@ function createSpeakerIcon({ icon, label }) {
 
 
 function updateScrollLock() {
-  const modalOpen = !document.getElementById('modal').classList.contains('hidden');
-  const imageOpen = !document.getElementById('image-viewer').classList.contains('hidden');
-  document.body.classList.toggle('modal-open', modalOpen || imageOpen);
+  const modal = document.getElementById('modal');
+  const imageViewer = document.getElementById('image-viewer');
+  const vocabularyModal = document.getElementById('vocabulary-modal');
+  const modalOpen = modal && !modal.classList.contains('hidden');
+  const imageOpen = imageViewer && !imageViewer.classList.contains('hidden');
+  const vocabularyOpen = vocabularyModal && !vocabularyModal.classList.contains('hidden');
+  document.body.classList.toggle('modal-open', modalOpen || imageOpen || vocabularyOpen);
 }
 
 function showModalElement(modal) {
@@ -457,7 +461,10 @@ function setActiveView(view) {
     if (typeof setActiveVocabularyTab === 'function') setActiveVocabularyTab(state.currentVocabularyTab || 'vocabulary-today');
     closeModal();
     closeImageViewer();
+    if (typeof closeVocabularyModal === 'function') closeVocabularyModal();
     renderVocabulary();
+  } else if (typeof closeVocabularyModal === 'function') {
+    closeVocabularyModal();
   }
 }
 
