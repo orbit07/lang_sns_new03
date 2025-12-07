@@ -91,6 +91,9 @@ function createVocabularyCard(front, { post, textIndex }) {
     updatedAt: now,
     fromPostId: post?.id ?? null,
     front,
+    frontLanguage: post?.texts?.[textIndex]?.language || '',
+    frontPronunciation: post?.texts?.[textIndex]?.pronunciation || null,
+    frontSpeaker: post?.texts?.[textIndex]?.speaker || post?.texts?.[textIndex]?.speaker_type || 'none',
     back: [],
     rememberCount: 0,
     nextReviewDate: getDateKey(now),
@@ -110,6 +113,9 @@ function createEmptyVocabularyCard() {
     fromPostId: null,
     frontSource: null,
     front: '',
+    frontLanguage: '',
+    frontPronunciation: null,
+    frontSpeaker: 'none',
     back: [],
     rememberCount: 0,
     nextReviewDate: getDateKey(now),
@@ -397,6 +403,25 @@ function openVocabularyEditor(card, options = {}) {
   frontInput.rows = 2;
   container.append(frontLabel, frontInput);
 
+  const frontMetaRow = document.createElement('div');
+  frontMetaRow.className = 'inline-form-row front-meta-row';
+
+  const frontLang = document.createElement('select');
+  frontLang.innerHTML = '<option value="">言語</option>' + langOptions.map((opt) => `<option value="${opt.value}">${opt.label}</option>`).join('');
+  frontLang.value = card.frontLanguage || '';
+
+  const frontPron = document.createElement('input');
+  frontPron.type = 'text';
+  frontPron.placeholder = '発音メモ（任意）';
+  frontPron.value = card.frontPronunciation || '';
+
+  const frontSpeaker = document.createElement('select');
+  frontSpeaker.innerHTML = speakerOptions.map((opt) => `<option value="${opt.value}">${opt.label}</option>`).join('');
+  frontSpeaker.value = card.frontSpeaker || 'none';
+
+  frontMetaRow.append(frontLang, frontPron, frontSpeaker);
+  container.appendChild(frontMetaRow);
+
   const backLabel = document.createElement('div');
   backLabel.textContent = '裏（言い方を追加）';
   container.appendChild(backLabel);
@@ -499,6 +524,9 @@ function openVocabularyEditor(card, options = {}) {
       return;
     }
     card.front = front;
+    card.frontLanguage = frontLang.value || '';
+    card.frontPronunciation = frontPron.value.trim() || '';
+    card.frontSpeaker = frontSpeaker.value || 'none';
     card.back = back;
     card.nextReviewDate = scheduleInput.value || null;
     card.isArchived = archiveInput.checked;
@@ -522,6 +550,23 @@ function openNewVocabularyCardModal() {
   openVocabularyEditor(card, { isNew: true });
 }
 
+function createSpeechButton(text, language) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'speak-button';
+  btn.innerHTML = '<img src="img/vol.svg" alt="" /> 発音';
+
+  const langInfo = langOptions.find((opt) => opt.value === language);
+  const disabled = !langInfo?.speakable || !(text || '').trim().length;
+  if (disabled) {
+    btn.disabled = true;
+    btn.classList.add('disabled');
+  } else {
+    btn.addEventListener('click', () => playSpeech(text, language));
+  }
+  return btn;
+}
+
 function buildBackEntry(entry) {
   const row = document.createElement('div');
   row.className = 'back-entry';
@@ -534,6 +579,8 @@ function buildBackEntry(entry) {
   meta.appendChild(lang);
 
   meta.appendChild(createSpeakerBadge(entry.speaker || 'none'));
+
+  meta.appendChild(createSpeechButton(entry.content, entry.language));
 
   const main = document.createElement('div');
   main.className = 'back-entry-main';
@@ -551,16 +598,6 @@ function buildBackEntry(entry) {
     pron.className = 'pronunciation-chip';
     pron.textContent = entry.pronunciation;
     actionRow.appendChild(pron);
-  }
-
-  const langInfo = langOptions.find((opt) => opt.value === entry.language);
-  if (langInfo?.speakable && (entry.content || '').trim().length) {
-    const speakBtn = document.createElement('button');
-    speakBtn.type = 'button';
-    speakBtn.className = 'speak-button';
-    speakBtn.innerHTML = '<img src="img/vol.svg" alt="" /> 発音';
-    speakBtn.addEventListener('click', () => playSpeech(entry.content, entry.language));
-    actionRow.appendChild(speakBtn);
   }
 
   if (actionRow.children.length) main.appendChild(actionRow);
@@ -611,6 +648,10 @@ function renderTodayReviewCard(card) {
   faceLabel.className = 'face-label';
   faceLabel.textContent = vocabularyReviewState.showFront ? 'Front' : 'Back';
 
+  const counter = document.createElement('span');
+  counter.className = 'review-counter';
+  counter.textContent = `${vocabularyReviewState.todayIndex + 1} / ${vocabularyReviewState.todayList.length}`;
+
   const toggleBtn = document.createElement('button');
   toggleBtn.type = 'button';
   toggleBtn.className = 'ghost-action';
@@ -620,13 +661,31 @@ function renderTodayReviewCard(card) {
     renderVocabularyToday();
   });
 
-  header.append(faceLabel, toggleBtn);
+  header.append(faceLabel, counter, toggleBtn);
   cardEl.appendChild(header);
+
+  const faceMeta = document.createElement('div');
+  faceMeta.className = 'face-meta';
+
+  const lang = document.createElement('span');
+  lang.className = 'text-label';
+  lang.textContent = getLanguageLabel(card.frontLanguage) || '未設定';
+  faceMeta.append(lang);
+
+  faceMeta.append(createSpeakerBadge(card.frontSpeaker || 'none'));
+  faceMeta.append(createSpeechButton(card.front, card.frontLanguage));
+
+  if (card.frontPronunciation) {
+    const pron = document.createElement('span');
+    pron.className = 'pronunciation-chip';
+    pron.textContent = card.frontPronunciation;
+    faceMeta.append(pron);
+  }
 
   const frontText = document.createElement('div');
   frontText.className = 'front-text';
   frontText.textContent = card.front || '（表未設定）';
-  cardEl.appendChild(frontText);
+  cardEl.append(faceMeta, frontText);
 
   if (!vocabularyReviewState.showFront) {
     const backWrap = document.createElement('div');

@@ -253,11 +253,25 @@
   gap: 8px;
 }
 
+.vocabulary-review-card .review-counter {
+  margin-left: auto;
+  font-weight: 700;
+  color: #1f7aee;
+}
+
 .vocabulary-review-card .face-label {
   color: var(--muted);
   letter-spacing: .08em;
   font-size: 1.3rem;
   text-transform: uppercase;
+}
+
+.vocabulary-review-card .face-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: var(--muted);
 }
 
 .vocabulary-review-card .front-text {
@@ -331,6 +345,11 @@
 
 .vocabulary-review-card .speak-button img {
   width: 14px;
+}
+
+.vocabulary-review-card .speak-button.disabled {
+  opacity: .5;
+  cursor: not-allowed;
 }
 
 .vocabulary-review-card .tag-group {
@@ -504,6 +523,10 @@
   grid-template-columns: 2fr 1fr 1fr 1fr auto;
   gap: 6px;
   align-items: center;
+}
+
+.front-meta-row {
+  grid-template-columns: 2fr 1fr 1fr;
 }
 
 .inline-form-row input,
