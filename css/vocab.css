@@ -145,6 +145,27 @@
   align-items: center;
 }
 
+.vocabulary-progress {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-left: auto;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.vocabulary-progress-label {
+  color: var(--muted);
+  font-size: 1.3rem;
+}
+
+.vocabulary-progress-value {
+  font-weight: 700;
+  font-size: 1.8rem;
+}
+
 .vocabulary-controls {
   display: flex;
   flex-wrap: wrap;
@@ -209,6 +230,200 @@
   display: grid;
   gap: 12px;
 }
+
+.vocabulary-today-card-container {
+  min-height: 320px;
+}
+
+.vocabulary-review-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(31, 122, 238, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vocabulary-review-card .face-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.vocabulary-review-card .face-label {
+  color: var(--muted);
+  letter-spacing: .08em;
+  font-size: 1.3rem;
+  text-transform: uppercase;
+}
+
+.vocabulary-review-card .front-text {
+  font-size: 2rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.vocabulary-review-card .back-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vocabulary-review-card .back-entry {
+  padding: 10px;
+  border-radius: 12px;
+  background: #f7f9fc;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.vocabulary-review-card .back-entry-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vocabulary-review-card .back-entry-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.vocabulary-review-card .back-text {
+  font-size: 1.7rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.vocabulary-review-card .back-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.vocabulary-review-card .pronunciation-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef2f8;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 1.3rem;
+  color: #4b5b74;
+}
+
+.vocabulary-review-card .speak-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #d7dbe4;
+  background: #fff;
+  cursor: pointer;
+}
+
+.vocabulary-review-card .speak-button img {
+  width: 14px;
+}
+
+.vocabulary-review-card .tag-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vocabulary-review-card .tag-chip {
+  background: #eef2f8;
+  color: #4b5b74;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 1.2rem;
+}
+
+.vocabulary-review-card .memo-block {
+  background: #fff9f3;
+  border: 1px solid #ffe3c2;
+  padding: 10px;
+  border-radius: 10px;
+  color: #9b6b22;
+  white-space: pre-wrap;
+}
+
+.vocabulary-review-card .face-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.vocabulary-review-card .primary-action {
+  background: #1f7aee;
+  color: #fff;
+  border: 1px solid #1f7aee;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.vocabulary-review-card .ghost-action {
+  background: #fff;
+  color: #1f7aee;
+  border: 1px solid #d7dbe4;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.vocabulary-review-card .danger-action {
+  background: #fff5f5;
+  color: #d64545;
+  border: 1px solid #f1c0c0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.vocabulary-review-card .know-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.vocabulary-review-card .know-button,
+.vocabulary-review-card .dontknow-button {
+  flex: 1 1 160px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.vocabulary-review-card .know-button { background: linear-gradient(135deg, #34d399, #22c55e); }
+.vocabulary-review-card .dontknow-button { background: linear-gradient(135deg, #f87171, #ef4444); }
+
+.vocabulary-finish {
+  margin-top: 18px;
+  background: #f7f9fc;
+  border: 1px dashed #d7dbe4;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+.finish-emoji { font-size: 3.2rem; }
+.finish-title { margin: 8px 0 4px; font-size: 1.8rem; }
+.finish-subtitle { margin: 0; color: var(--muted); }
 
 .vocabulary-card {
   background: #fff;
