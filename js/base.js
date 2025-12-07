@@ -76,11 +76,15 @@ function ensureVocabularyFields(data) {
     const nextReviewDate = card.nextReviewDate || card.nextReviewAt || null;
     const id = typeof card.id === 'number' ? card.id : nextId();
     const createdAt = card.createdAt || Date.now();
+    const inferFrontSpeaker = card.frontSpeaker || card.speaker || card.speaker_type || 'none';
     return {
       id,
       fromPostId: card.fromPostId ?? card.postId ?? null,
       frontSource: card.frontSource || (card.postId ? { postId: card.postId, textIndex: card.textIndex ?? null } : null),
       front: card.front || '',
+      frontLanguage: card.frontLanguage || card.language || '',
+      frontPronunciation: card.frontPronunciation || card.pronunciation || null,
+      frontSpeaker: inferFrontSpeaker,
       back: backArray,
       rememberCount: Number(card.rememberCount || 0),
       nextReviewDate: nextReviewDate || null,
