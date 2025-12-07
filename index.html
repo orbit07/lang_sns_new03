@@ -123,13 +123,22 @@
             <span class="vocabulary-stat-label">覚えた！</span>
           </div>
         </div>
+        <div class="vocabulary-progress">
+          <span class="vocabulary-progress-label">本日の進捗</span>
+          <span class="vocabulary-progress-value" id="vocabulary-today-progress">0 / 0</span>
+        </div>
       </div>
       <div class="vocabulary-section" id="vocabulary-review-section">
         <div class="vocabulary-section-header">
           <h3>今日のカード</h3>
           <span class="pill" id="vocabulary-review-badge">0</span>
         </div>
-        <div id="vocabulary-review-list" class="vocabulary-list"></div>
+        <div id="vocabulary-today-card-container" class="vocabulary-today-card-container"></div>
+        <div id="vocabulary-today-finish" class="vocabulary-finish hidden">
+          <div class="finish-emoji">🎉</div>
+          <p class="finish-title">今日はすべて完了しました！</p>
+          <p class="finish-subtitle">復習は明日また戻ってきましょう！</p>
+        </div>
       </div>
     </section>
 
@@ -158,7 +167,7 @@
           <option value="next">次の出題が近い順</option>
         </select>
       </div>
-      <div id="search-results" class="card-list"></div>
+      <div id="vocabulary-list" class="card-list"></div>
     </section>
 
   </div>

@@ -1,6 +1,12 @@
 let activeTextMenu = null;
 let vocabularyControlsReady = false;
 let vocabularyTabsReady = false;
+const vocabularyReviewState = {
+  todayList: [],
+  todayIndex: 0,
+  showFront: true,
+  lastLoadedDate: null,
+};
 
 function closeTextContextMenu() {
   if (activeTextMenu?.handler) {
@@ -89,6 +95,8 @@ function createVocabularyCard(front, { post, textIndex }) {
     rememberCount: 0,
     nextReviewDate: getDateKey(now),
     isArchived: false,
+    tags: [],
+    memo: '',
     frontSource: post && typeof textIndex === 'number' ? { postId: post.id, textIndex } : null,
   };
 }
@@ -106,6 +114,8 @@ function createEmptyVocabularyCard() {
     rememberCount: 0,
     nextReviewDate: getDateKey(now),
     isArchived: false,
+    tags: [],
+    memo: '',
   };
 }
 
@@ -255,9 +265,10 @@ function attachVocabularyAction(target, post, textIndex) {
 
 function calcNextReviewDate(rememberCount) {
   const today = new Date();
-  const offsets = [1, 7, 30, 60, 120];
-  let days = offsets[Math.min(rememberCount, offsets.length) - 1] || 120 * Math.pow(2, rememberCount - offsets.length);
-  if (rememberCount === 0) days = 1;
+  let days = 30;
+  if (rememberCount <= 1) days = 1;
+  else if (rememberCount === 2) days = 7;
+  else if (rememberCount === 3) days = 30;
   today.setDate(today.getDate() + days);
   return getDateKey(today);
 }
@@ -279,6 +290,32 @@ function shuffle(array) {
   return arr;
 }
 
+function getDueCards() {
+  const todayKey = getDateKey(Date.now());
+  return (state.data.vocabularyCards || []).filter(
+    (card) => !card.isArchived && (!card.nextReviewDate || card.nextReviewDate <= todayKey),
+  );
+}
+
+function loadTodayCards(force = false) {
+  const todayKey = getDateKey(Date.now());
+  if (!force && vocabularyReviewState.lastLoadedDate === todayKey && vocabularyReviewState.todayList.length) return;
+  vocabularyReviewState.lastLoadedDate = todayKey;
+  vocabularyReviewState.todayList = shuffle(getDueCards());
+  vocabularyReviewState.todayIndex = 0;
+  vocabularyReviewState.showFront = true;
+}
+
+function getCurrentTodayCard() {
+  return vocabularyReviewState.todayList[vocabularyReviewState.todayIndex] || null;
+}
+
+function goNextTodayCard() {
+  vocabularyReviewState.todayIndex += 1;
+  vocabularyReviewState.showFront = true;
+  renderVocabularyToday();
+}
+
 function setupVocabularyControls() {
   if (vocabularyControlsReady) return;
   vocabularyControlsReady = true;
@@ -287,6 +324,9 @@ function setupVocabularyControls() {
       const el = document.getElementById(id);
       if (el) el.addEventListener('input', () => renderVocabulary());
     });
+
+  const searchBtn = document.getElementById('vocabulary-search-btn');
+  if (searchBtn) searchBtn.addEventListener('click', () => renderVocabulary());
 }
 
 function buildBackList(backItems) {
@@ -325,6 +365,24 @@ function buildEmptyState(message) {
   empty.className = 'empty-state';
   empty.textContent = message;
   return empty;
+}
+
+function renderVocabularySummary() {
+  const cards = state.data.vocabularyCards || [];
+  const countEl = document.getElementById('vocabulary-count');
+  const reviewEl = document.getElementById('vocabulary-review-count');
+  const reviewBadge = document.getElementById('vocabulary-review-badge');
+  const progressEl = document.getElementById('vocabulary-today-progress');
+
+  const reviewTotal = cards.reduce((sum, card) => sum + (Number(card.rememberCount) || 0), 0);
+  const dueCount = getDueCards().length;
+  const todayTotal = vocabularyReviewState.todayList.length;
+  const shownIndex = todayTotal ? Math.min(vocabularyReviewState.todayIndex + 1, todayTotal) : 0;
+
+  if (countEl) countEl.textContent = cards.length;
+  if (reviewEl) reviewEl.textContent = reviewTotal;
+  if (reviewBadge) reviewBadge.textContent = dueCount;
+  if (progressEl) progressEl.textContent = `${shownIndex} / ${todayTotal}`;
 }
 
 function openVocabularyEditor(card, options = {}) {
@@ -464,6 +522,191 @@ function openNewVocabularyCardModal() {
   openVocabularyEditor(card, { isNew: true });
 }
 
+function buildBackEntry(entry) {
+  const row = document.createElement('div');
+  row.className = 'back-entry';
+
+  const meta = document.createElement('div');
+  meta.className = 'back-meta';
+  const lang = document.createElement('span');
+  lang.className = 'text-label';
+  lang.textContent = getLanguageLabel(entry.language);
+  meta.appendChild(lang);
+
+  meta.appendChild(createSpeakerBadge(entry.speaker || 'none'));
+
+  const main = document.createElement('div');
+  main.className = 'back-entry-main';
+
+  const text = document.createElement('div');
+  text.className = 'back-text';
+  text.textContent = entry.content || '';
+  main.appendChild(text);
+
+  const actionRow = document.createElement('div');
+  actionRow.className = 'back-entry-actions';
+
+  if (entry.pronunciation) {
+    const pron = document.createElement('span');
+    pron.className = 'pronunciation-chip';
+    pron.textContent = entry.pronunciation;
+    actionRow.appendChild(pron);
+  }
+
+  const langInfo = langOptions.find((opt) => opt.value === entry.language);
+  if (langInfo?.speakable && (entry.content || '').trim().length) {
+    const speakBtn = document.createElement('button');
+    speakBtn.type = 'button';
+    speakBtn.className = 'speak-button';
+    speakBtn.innerHTML = '<img src="img/vol.svg" alt="" /> 発音';
+    speakBtn.addEventListener('click', () => playSpeech(entry.content, entry.language));
+    actionRow.appendChild(speakBtn);
+  }
+
+  if (actionRow.children.length) main.appendChild(actionRow);
+
+  row.append(meta, main);
+  return row;
+}
+
+function deleteVocabularyCard(card) {
+  if (!card) return;
+  if (!confirm('カードを削除しますか？')) return;
+  state.data.vocabularyCards = (state.data.vocabularyCards || []).filter((c) => c.id !== card.id);
+  vocabularyReviewState.todayList = vocabularyReviewState.todayList.filter((c) => c.id !== card.id);
+  vocabularyReviewState.todayIndex = Math.min(vocabularyReviewState.todayIndex, vocabularyReviewState.todayList.length);
+  vocabularyReviewState.showFront = true;
+  persistData();
+  renderVocabulary();
+}
+
+function handleKnow(card) {
+  if (!card) return;
+  card.rememberCount = Number(card.rememberCount || 0) + 1;
+  card.nextReviewDate = calcNextReviewDate(card.rememberCount);
+  card.updatedAt = Date.now();
+  persistData();
+  goNextTodayCard();
+}
+
+function handleDontKnow(card) {
+  if (!card) return;
+  card.rememberCount = 0;
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  card.nextReviewDate = getDateKey(tomorrow);
+  card.updatedAt = Date.now();
+  persistData();
+  goNextTodayCard();
+}
+
+function renderTodayReviewCard(card) {
+  const cardEl = document.createElement('div');
+  cardEl.className = 'vocabulary-review-card';
+  cardEl.dataset.cardId = card.id;
+
+  const header = document.createElement('div');
+  header.className = 'face-header';
+  const faceLabel = document.createElement('span');
+  faceLabel.className = 'face-label';
+  faceLabel.textContent = vocabularyReviewState.showFront ? 'Front' : 'Back';
+
+  const toggleBtn = document.createElement('button');
+  toggleBtn.type = 'button';
+  toggleBtn.className = 'ghost-action';
+  toggleBtn.textContent = vocabularyReviewState.showFront ? '裏を見る' : '表に戻る';
+  toggleBtn.addEventListener('click', () => {
+    vocabularyReviewState.showFront = !vocabularyReviewState.showFront;
+    renderVocabularyToday();
+  });
+
+  header.append(faceLabel, toggleBtn);
+  cardEl.appendChild(header);
+
+  const frontText = document.createElement('div');
+  frontText.className = 'front-text';
+  frontText.textContent = card.front || '（表未設定）';
+  cardEl.appendChild(frontText);
+
+  if (!vocabularyReviewState.showFront) {
+    const backWrap = document.createElement('div');
+    backWrap.className = 'back-entries';
+    if (!card.back.length) {
+      backWrap.appendChild(buildEmptyState('裏が未登録です。編集から追加してください。'));
+    } else {
+      card.back.forEach((entry) => backWrap.appendChild(buildBackEntry(entry)));
+    }
+    cardEl.appendChild(backWrap);
+
+    if (card.tags?.length) {
+      const tagGroup = document.createElement('div');
+      tagGroup.className = 'tag-group';
+      card.tags.forEach((tag) => {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.textContent = `#${tag}`;
+        tagGroup.appendChild(chip);
+      });
+      cardEl.appendChild(tagGroup);
+    }
+
+    if (card.memo) {
+      const memo = document.createElement('div');
+      memo.className = 'memo-block';
+      memo.textContent = card.memo;
+      cardEl.appendChild(memo);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'face-actions';
+
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.className = 'ghost-action';
+    edit.textContent = '編集';
+    edit.addEventListener('click', () => openVocabularyEditor(card));
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'danger-action';
+    remove.textContent = '削除';
+    remove.addEventListener('click', () => deleteVocabularyCard(card));
+
+    actions.append(edit, remove);
+
+    if (card.fromPostId) {
+      const link = document.createElement('button');
+      link.type = 'button';
+      link.className = 'ghost-action';
+      link.textContent = 'SNS投稿を開く';
+      link.addEventListener('click', () => jumpToPost(card.fromPostId, card.frontSource?.textIndex || 0));
+      actions.appendChild(link);
+    }
+
+    cardEl.appendChild(actions);
+
+    const knowActions = document.createElement('div');
+    knowActions.className = 'know-actions';
+
+    const dontKnow = document.createElement('button');
+    dontKnow.type = 'button';
+    dontKnow.className = 'dontknow-button';
+    dontKnow.textContent = '分からなかった 👎';
+    dontKnow.addEventListener('click', () => handleDontKnow(card));
+
+    const know = document.createElement('button');
+    know.type = 'button';
+    know.className = 'know-button';
+    know.textContent = '分かった 👍';
+    know.addEventListener('click', () => handleKnow(card));
+
+    knowActions.append(dontKnow, know);
+    cardEl.appendChild(knowActions);
+  }
+
+  return cardEl;
+}
+
 function renderVocabularyCard(card) {
   const cardEl = document.createElement('article');
   cardEl.className = 'vocabulary-card';
@@ -521,12 +764,7 @@ function renderVocabularyCard(card) {
   const remove = document.createElement('button');
   remove.type = 'button';
   remove.textContent = '削除';
-  remove.addEventListener('click', () => {
-    if (!confirm('カードを削除しますか？')) return;
-    state.data.vocabularyCards = state.data.vocabularyCards.filter((c) => c.id !== card.id);
-    persistData();
-    renderVocabulary();
-  });
+  remove.addEventListener('click', () => deleteVocabularyCard(card));
 
   actions.append(remember, edit, archive, remove);
 
@@ -572,41 +810,57 @@ function filterAndSortCards(cards) {
   return filtered.sort(sorters[sort] || sorters.updated);
 }
 
-function renderVocabulary() {
-  setupVocabularyControls();
-  const list = document.getElementById('vocabulary-list');
-  const reviewList = document.getElementById('vocabulary-review-list');
-  if (!list || !reviewList) return;
+function renderVocabularyToday() {
+  const container = document.getElementById('vocabulary-today-card-container');
+  const finish = document.getElementById('vocabulary-today-finish');
+  if (!container) return;
 
-  ensureVocabularyFields(state.data);
-  const cards = [...(state.data.vocabularyCards || [])];
-  const countEl = document.getElementById('vocabulary-count');
-  const reviewEl = document.getElementById('vocabulary-review-count');
   const todayKey = getDateKey(Date.now());
-
-  const dueCards = shuffle(cards.filter((card) => !card.isArchived && (!card.nextReviewDate || card.nextReviewDate <= todayKey)));
-  const reviewBadge = document.getElementById('vocabulary-review-badge');
-  if (reviewBadge) reviewBadge.textContent = dueCards.length;
-
-  const reviewTotal = cards.reduce((sum, card) => sum + (Number(card.rememberCount) || 0), 0);
-
-  if (countEl) countEl.textContent = cards.length;
-  if (reviewEl) reviewEl.textContent = reviewTotal;
-
-  reviewList.innerHTML = '';
-  if (!dueCards.length) {
-    reviewList.appendChild(buildEmptyState('お疲れさま！今日は復習なし。'));
-  } else {
-    dueCards.forEach((card) => reviewList.appendChild(renderVocabularyCard(card)));
+  const dueCount = getDueCards().length;
+  const finishedToday = vocabularyReviewState.todayIndex >= vocabularyReviewState.todayList.length;
+  if (vocabularyReviewState.lastLoadedDate !== todayKey || (!vocabularyReviewState.todayList.length && dueCount) || (finishedToday && dueCount)) {
+    loadTodayCards(true);
   }
 
+  renderVocabularySummary();
+
+  container.innerHTML = '';
+  const total = vocabularyReviewState.todayList.length;
+  const current = getCurrentTodayCard();
+
+  if (!total) {
+    if (finish) finish.classList.remove('hidden');
+    container.appendChild(buildEmptyState('お疲れさま！今日は復習なし。'));
+    return;
+  }
+
+  if (!current) {
+    if (finish) finish.classList.remove('hidden');
+    return;
+  }
+
+  if (finish) finish.classList.add('hidden');
+  container.appendChild(renderTodayReviewCard(current));
+}
+
+function renderVocabularyList() {
+  const list = document.getElementById('vocabulary-list');
+  if (!list) return;
+
+  const filtered = filterAndSortCards(state.data.vocabularyCards || []);
   list.innerHTML = '';
-  const filtered = filterAndSortCards(cards);
   if (!filtered.length) {
     list.appendChild(buildEmptyState('まだ単語カードがありません。投稿のテキストを長押しして追加してください。'));
     return;
   }
   filtered.forEach((card) => list.appendChild(renderVocabularyCard(card)));
+}
+
+function renderVocabulary() {
+  setupVocabularyControls();
+  ensureVocabularyFields(state.data);
+  renderVocabularyToday();
+  renderVocabularyList();
 }
 
 function setActiveVocabularyTab(tabName) {

@@ -87,6 +87,8 @@ function ensureVocabularyFields(data) {
       isArchived: Boolean(card.isArchived),
       createdAt,
       updatedAt: card.updatedAt || createdAt,
+      tags: Array.isArray(card.tags) ? card.tags : [],
+      memo: card.memo || '',
     };
   });
 }
