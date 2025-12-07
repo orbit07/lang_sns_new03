@@ -172,6 +172,8 @@ function addFrontFromPost(post, textIndex) {
   if (!post || post.isDeleted) return;
   const text = post.texts?.[textIndex];
   if (!text?.content?.trim()) return;
+  setActiveView('vocabulary');
+  setActiveVocabularyTab('vocabulary-today');
   openVocabularyEditor(
     {
       ...createEmptyVocabularyCard(),
@@ -190,7 +192,8 @@ function addBackFromPost(post, textIndex) {
   if (!post || post.isDeleted) return;
   const entry = buildBackEntryFromText(post, textIndex);
   if (!entry || !entry.content.trim()) return;
-
+  setActiveView('vocabulary');
+  setActiveVocabularyTab('vocabulary-today');
   const card = {
     ...createEmptyVocabularyCard(),
     fromPostId: post.id,
@@ -703,7 +706,8 @@ function createSpeechButton(text, language) {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'speak-button';
-  btn.innerHTML = '<img src="img/vol.svg" alt="" /> 発音';
+  const label = getLanguageLabel(language) || '発音';
+  btn.innerHTML = `<img src="img/vol.svg" alt="" width="16" class="icon-inline"> ${label}`;
 
   const langInfo = langOptions.find((opt) => opt.value === language);
   const disabled = !langInfo?.speakable || !(text || '').trim().length;
@@ -806,6 +810,12 @@ function renderTodayReviewCard(card) {
   toggleBtn.className = 'ghost-action';
   toggleBtn.textContent = vocabularyReviewState.showFront ? '裏を見る' : '表に戻る';
   toggleBtn.addEventListener('click', () => {
+    const container = document.getElementById('vocabulary-today-card-container');
+    if (container) {
+      container.classList.add('is-flipping');
+      requestAnimationFrame(() => container.classList.add('is-flipping-active'));
+      setTimeout(() => container.classList.remove('is-flipping', 'is-flipping-active'), 500);
+    }
     vocabularyReviewState.showFront = !vocabularyReviewState.showFront;
     renderVocabularyToday();
   });
@@ -868,19 +878,19 @@ function renderTodayReviewCard(card) {
     const actions = document.createElement('div');
     actions.className = 'face-actions';
 
-    const edit = document.createElement('button');
-    edit.type = 'button';
-    edit.className = 'ghost-action';
-    edit.textContent = '編集';
-    edit.addEventListener('click', () => openVocabularyEditor(card));
-
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'danger-action';
     remove.textContent = '削除';
     remove.addEventListener('click', () => deleteVocabularyCard(card));
 
-    actions.append(edit, remove);
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.className = 'ghost-action';
+    edit.textContent = '編集';
+    edit.addEventListener('click', () => openVocabularyEditor(card));
+
+    actions.append(remove, edit);
 
     if (card.fromPostId) {
       const link = document.createElement('button');
@@ -1035,15 +1045,16 @@ function renderVocabularyToday() {
   container.innerHTML = '';
   const total = vocabularyReviewState.todayList.length;
   const current = getCurrentTodayCard();
+  const completed = total === 0 || vocabularyReviewState.todayIndex >= total;
+
+  if (finish) finish.classList.toggle('hidden', !completed);
 
   if (!total) {
-    if (finish) finish.classList.remove('hidden');
     container.appendChild(buildEmptyState('お疲れさま！今日は復習なし。'));
     return;
   }
 
   if (!current) {
-    if (finish) finish.classList.remove('hidden');
     return;
   }
 
