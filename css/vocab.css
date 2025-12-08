@@ -282,18 +282,10 @@
   transform: none;
 }
 
-.vocabulary-review-card.is-flipped .cardface__front {
-  transform: rotateY(180deg);
-}
-
 .cardface__back {
   transform: rotateY(180deg);
   color: #262626;
   background-color: #f7f9fc;
-}
-
-.vocabulary-review-card.is-flipped .cardface__back {
-  transform: rotateY(360deg);
 }
 
 .vocabulary-review-card .face-header {
