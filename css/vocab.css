@@ -451,13 +451,6 @@
   cursor: pointer;
 }
 
-.vocabulary-review-card .know-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-}
-
 .vocabulary-review-card .know-button,
 .vocabulary-review-card .dontknow-button {
   flex: 1 1 160px;
