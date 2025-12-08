@@ -915,8 +915,22 @@ function renderTodayReviewCard(card) {
     backFace.appendChild(memo);
   }
 
+  const dontKnow = document.createElement('button');
+  dontKnow.type = 'button';
+  dontKnow.className = 'dontknow-button';
+  dontKnow.textContent = '分からなかった 👎';
+  dontKnow.addEventListener('click', () => handleDontKnow(card));
+
+  const know = document.createElement('button');
+  know.type = 'button';
+  know.className = 'know-button';
+  know.textContent = '分かった 👍';
+  know.addEventListener('click', () => handleKnow(card));
+
   const actions = document.createElement('div');
   actions.className = 'face-actions';
+
+  actions.append(dontKnow, know);
 
   const remove = document.createElement('button');
   remove.type = 'button';
@@ -942,24 +956,6 @@ function renderTodayReviewCard(card) {
   }
 
   backFace.appendChild(actions);
-
-  const knowActions = document.createElement('div');
-  knowActions.className = 'know-actions';
-
-  const dontKnow = document.createElement('button');
-  dontKnow.type = 'button';
-  dontKnow.className = 'dontknow-button';
-  dontKnow.textContent = '分からなかった 👎';
-  dontKnow.addEventListener('click', () => handleDontKnow(card));
-
-  const know = document.createElement('button');
-  know.type = 'button';
-  know.className = 'know-button';
-  know.textContent = '分かった 👍';
-  know.addEventListener('click', () => handleKnow(card));
-
-  knowActions.append(dontKnow, know);
-  backFace.appendChild(knowActions);
 
   inner.append(frontFace, backFace);
   cardEl.classList.toggle('is-flipped', !vocabularyReviewState.showFront);
