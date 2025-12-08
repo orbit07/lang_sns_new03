@@ -414,18 +414,18 @@ function closeVocabularyModal() {
 function openVocabularyEditor(card, options = {}) {
   const { isNew = false, relatedPost = null } = options;
   const container = document.createElement('div');
-  container.className = 'form-stack';
+  container.className = 'form-stack vocabulary-modal-stack';
 
   let frontSource = card.frontSource || null;
 
   const relatedEntries = relatedPost ? collectRelatedTextEntries(relatedPost) : [];
 
-  const frontLabel = document.createElement('label');
-  frontLabel.textContent = '表（状況）';
   const frontInput = document.createElement('textarea');
   frontInput.value = card.front || '';
   frontInput.rows = 2;
-  container.append(frontLabel, frontInput);
+  frontInput.placeholder = '表（状況）';
+  frontInput.className = 'vocabulary-textarea vocabulary-front-input';
+  container.append(frontInput);
 
   frontInput.addEventListener('input', () => {
     if (!frontInput.value.trim()) {
@@ -434,36 +434,47 @@ function openVocabularyEditor(card, options = {}) {
   });
 
   const frontMetaRow = document.createElement('div');
-  frontMetaRow.className = 'inline-form-row front-meta-row';
+  frontMetaRow.className = 'inline-form-row front-meta-row vocabulary-front-meta';
 
   const frontLang = document.createElement('select');
   frontLang.innerHTML = '<option value="">言語</option>' + langOptions.map((opt) => `<option value="${opt.value}">${opt.label}</option>`).join('');
   frontLang.value = card.frontLanguage || '';
+  frontLang.className = 'vocabulary-front-language';
 
   const frontPron = document.createElement('input');
   frontPron.type = 'text';
   frontPron.placeholder = '発音メモ（任意）';
   frontPron.value = card.frontPronunciation || '';
+  frontPron.className = 'vocabulary-front-pronunciation';
 
   const frontSpeaker = document.createElement('select');
   frontSpeaker.innerHTML = speakerOptions.map((opt) => `<option value="${opt.value}">${opt.label}</option>`).join('');
   frontSpeaker.value = card.frontSpeaker || 'none';
+  frontSpeaker.className = 'vocabulary-front-speaker';
 
   frontMetaRow.append(frontLang, frontPron, frontSpeaker);
   container.appendChild(frontMetaRow);
 
   const backLabel = document.createElement('div');
   backLabel.textContent = '裏（言い方を追加）';
+  backLabel.className = 'vocabulary-back-label';
   container.appendChild(backLabel);
 
   const backWrap = document.createElement('div');
-  backWrap.className = 'form-stack';
+  backWrap.className = 'form-stack vocabulary-back-wrap';
+
+  const ensureBackEntry = () => {
+    if (!card.back.length) {
+      card.back.push({ content: '', language: '', pronunciation: '', speaker: 'none' });
+    }
+  };
 
   const renderRows = () => {
+    ensureBackEntry();
     backWrap.innerHTML = '';
     card.back.forEach((entry, idx) => {
       const row = document.createElement('div');
-      row.className = 'inline-form-row';
+      row.className = 'inline-form-row vocabulary-back-row';
       row.dataset.fromPostId = entry.fromPostId ?? '';
       row.dataset.textIndex = typeof entry.textIndex === 'number' ? entry.textIndex : '';
 
@@ -472,27 +483,34 @@ function openVocabularyEditor(card, options = {}) {
       content.value = entry.content || '';
       content.placeholder = '表現';
       content.dataset.field = 'content';
+      content.className = 'vocabulary-back-content';
 
       const lang = document.createElement('select');
       lang.innerHTML = '<option value="">言語</option>' + langOptions.map((opt) => `<option value="${opt.value}">${opt.label}</option>`).join('');
       lang.value = entry.language || '';
       lang.dataset.field = 'language';
+      lang.className = 'vocabulary-back-language';
 
       const pron = document.createElement('input');
       pron.type = 'text';
       pron.placeholder = '発音メモ';
       pron.value = entry.pronunciation || '';
       pron.dataset.field = 'pronunciation';
+      pron.className = 'vocabulary-back-pronunciation';
 
       const speaker = document.createElement('select');
       speaker.innerHTML = speakerOptions.map((opt) => `<option value="${opt.value}">${opt.label}</option>`).join('');
       speaker.value = entry.speaker || 'none';
       speaker.dataset.field = 'speaker';
+      speaker.className = 'vocabulary-back-speaker';
 
       const del = document.createElement('button');
       del.type = 'button';
       del.textContent = '削除';
+      del.className = 'vocabulary-back-delete';
+      del.disabled = card.back.length <= 1;
       del.addEventListener('click', () => {
+        if (card.back.length <= 1) return;
         card.back.splice(idx, 1);
         renderRows();
       });
@@ -507,6 +525,7 @@ function openVocabularyEditor(card, options = {}) {
   const addBackBtn = document.createElement('button');
   addBackBtn.type = 'button';
   addBackBtn.textContent = '＋ 裏を追加';
+  addBackBtn.className = 'vocabulary-back-add';
   addBackBtn.addEventListener('click', () => {
     card.back.push({ content: '', language: '', pronunciation: '', speaker: 'none' });
     renderRows();
@@ -548,6 +567,7 @@ function openVocabularyEditor(card, options = {}) {
 
     const suggestionTitle = document.createElement('h4');
     suggestionTitle.textContent = 'SNSのテキストを利用';
+    suggestionTitle.className = 'vocabulary-suggestion-title';
     const suggestionHint = document.createElement('p');
     suggestionHint.className = 'vocabulary-suggestion-hint';
     suggestionHint.textContent = '同じポストやリポストから表・裏を選択するか、手入力してください。';
@@ -578,11 +598,13 @@ function openVocabularyEditor(card, options = {}) {
       const setFront = document.createElement('button');
       setFront.type = 'button';
       setFront.textContent = '表に設定';
+      setFront.className = 'vocabulary-suggestion-button vocabulary-suggestion-front';
       setFront.addEventListener('click', () => applyFrontEntry(entry));
 
       const addBack = document.createElement('button');
       addBack.type = 'button';
       addBack.textContent = '裏に追加';
+      addBack.className = 'vocabulary-suggestion-button vocabulary-suggestion-back';
       addBack.addEventListener('click', () => addBackEntry(entry));
 
       actions.append(setFront, addBack);
@@ -596,29 +618,33 @@ function openVocabularyEditor(card, options = {}) {
 
   const scheduleLabel = document.createElement('label');
   scheduleLabel.textContent = '次の出題日';
+  scheduleLabel.className = 'vocabulary-schedule-label';
   const scheduleInput = document.createElement('input');
   scheduleInput.type = 'date';
   scheduleInput.value = card.nextReviewDate || '';
+  scheduleInput.className = 'vocabulary-schedule-input';
   container.append(scheduleLabel, scheduleInput);
 
   const archiveRow = document.createElement('label');
-  archiveRow.className = 'vocabulary-checkbox';
+  archiveRow.className = 'vocabulary-checkbox vocabulary-archive-row';
   const archiveInput = document.createElement('input');
   archiveInput.type = 'checkbox';
   archiveInput.checked = Boolean(card.isArchived);
+  archiveInput.classList.add('vocabulary-archive-input');
   archiveRow.append(archiveInput, document.createTextNode('アーカイブする'));
   container.appendChild(archiveRow);
 
   const footer = document.createElement('div');
-  footer.className = 'modal-actions';
+  footer.className = 'modal-actions vocabulary-modal-actions';
   const cancel = document.createElement('button');
   cancel.type = 'button';
   cancel.textContent = 'キャンセル';
+  cancel.className = 'vocabulary-cancel-button';
   cancel.addEventListener('click', () => closeVocabularyModal());
 
   const save = document.createElement('button');
   save.type = 'button';
-  save.className = 'primary';
+  save.className = 'primary vocabulary-save-button';
   save.textContent = '保存';
   save.addEventListener('click', () => {
     const front = frontInput.value.trim();
@@ -791,33 +817,53 @@ function renderTodayReviewCard(card) {
   cardEl.className = 'vocabulary-review-card';
   cardEl.dataset.cardId = card.id;
 
-  const header = document.createElement('div');
-  header.className = 'face-header';
-  const faceLabel = document.createElement('span');
-  faceLabel.className = 'face-label';
-  faceLabel.textContent = vocabularyReviewState.showFront ? 'Front' : 'Back';
+  const inner = document.createElement('div');
+  inner.className = 'vocabulary-review-card-inner';
+  cardEl.appendChild(inner);
 
-  const counter = document.createElement('span');
-  counter.className = 'review-counter';
-  counter.textContent = `${vocabularyReviewState.todayIndex + 1} / ${vocabularyReviewState.todayList.length}`;
+  const counterText = `${vocabularyReviewState.todayIndex + 1} / ${vocabularyReviewState.todayList.length}`;
+  let frontToggleBtn = null;
+  let backToggleBtn = null;
 
-  const toggleBtn = document.createElement('button');
-  toggleBtn.type = 'button';
-  toggleBtn.className = 'ghost-action';
-  toggleBtn.textContent = vocabularyReviewState.showFront ? '裏を見る' : '表に戻る';
-  toggleBtn.addEventListener('click', () => {
-    const container = document.getElementById('vocabulary-today-card-container');
-    if (container) {
-      container.classList.add('is-flipping');
-      requestAnimationFrame(() => container.classList.add('is-flipping-active'));
-      setTimeout(() => container.classList.remove('is-flipping', 'is-flipping-active'), 500);
-    }
+  const updateToggleText = () => {
+    const text = vocabularyReviewState.showFront ? '裏を見る' : '表に戻る';
+    if (frontToggleBtn) frontToggleBtn.textContent = text;
+    if (backToggleBtn) backToggleBtn.textContent = text;
+  };
+
+  const toggleCardFace = () => {
     vocabularyReviewState.showFront = !vocabularyReviewState.showFront;
-    renderVocabularyToday();
-  });
+    cardEl.classList.toggle('is-flipped', !vocabularyReviewState.showFront);
+    updateToggleText();
+  };
 
-  header.append(faceLabel, counter, toggleBtn);
-  cardEl.appendChild(header);
+  const createHeader = (labelText, isFront = true) => {
+    const header = document.createElement('div');
+    header.className = 'face-header';
+
+    const faceLabel = document.createElement('span');
+    faceLabel.className = 'face-label';
+    faceLabel.textContent = labelText;
+
+    const counter = document.createElement('span');
+    counter.className = 'review-counter';
+    counter.textContent = counterText;
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.className = 'ghost-action vocabulary-toggle-button';
+    toggleBtn.addEventListener('click', toggleCardFace);
+
+    if (isFront) frontToggleBtn = toggleBtn;
+    else backToggleBtn = toggleBtn;
+
+    header.append(faceLabel, counter, toggleBtn);
+    return header;
+  };
+
+  const frontFace = document.createElement('div');
+  frontFace.className = 'cardface cardface__front vocabulary-review-face';
+  frontFace.appendChild(createHeader('Front', true));
 
   const faceMeta = document.createElement('div');
   faceMeta.className = 'face-meta';
@@ -835,83 +881,89 @@ function renderTodayReviewCard(card) {
   const frontText = document.createElement('div');
   frontText.className = 'front-text';
   frontText.textContent = card.front || '（表未設定）';
-  cardEl.append(faceMeta, frontText);
+  frontFace.append(faceMeta, frontText);
 
-  if (!vocabularyReviewState.showFront) {
-    const backWrap = document.createElement('div');
-    backWrap.className = 'back-entries';
-    if (!card.back.length) {
-      backWrap.appendChild(buildEmptyState('裏が未登録です。編集から追加してください。'));
-    } else {
-      card.back.forEach((entry) => backWrap.appendChild(buildBackEntry(entry)));
-    }
-    cardEl.appendChild(backWrap);
+  const backFace = document.createElement('div');
+  backFace.className = 'cardface cardface__back vocabulary-review-face';
+  backFace.appendChild(createHeader('Back', false));
 
-    if (card.tags?.length) {
-      const tagGroup = document.createElement('div');
-      tagGroup.className = 'tag-group';
-      card.tags.forEach((tag) => {
-        const chip = document.createElement('span');
-        chip.className = 'tag-chip';
-        chip.textContent = `#${tag}`;
-        tagGroup.appendChild(chip);
-      });
-      cardEl.appendChild(tagGroup);
-    }
-
-    if (card.memo) {
-      const memo = document.createElement('div');
-      memo.className = 'memo-block';
-      memo.textContent = card.memo;
-      cardEl.appendChild(memo);
-    }
-
-    const actions = document.createElement('div');
-    actions.className = 'face-actions';
-
-    const remove = document.createElement('button');
-    remove.type = 'button';
-    remove.className = 'danger-action';
-    remove.textContent = '削除';
-    remove.addEventListener('click', () => deleteVocabularyCard(card));
-
-    const edit = document.createElement('button');
-    edit.type = 'button';
-    edit.className = 'ghost-action';
-    edit.textContent = '編集';
-    edit.addEventListener('click', () => openVocabularyEditor(card));
-
-    actions.append(remove, edit);
-
-    if (card.fromPostId) {
-      const link = document.createElement('button');
-      link.type = 'button';
-      link.className = 'ghost-action';
-      link.textContent = 'SNS投稿を開く';
-      link.addEventListener('click', () => jumpToPost(card.fromPostId, card.frontSource?.textIndex || 0));
-      actions.appendChild(link);
-    }
-
-    cardEl.appendChild(actions);
-
-    const knowActions = document.createElement('div');
-    knowActions.className = 'know-actions';
-
-    const dontKnow = document.createElement('button');
-    dontKnow.type = 'button';
-    dontKnow.className = 'dontknow-button';
-    dontKnow.textContent = '分からなかった 👎';
-    dontKnow.addEventListener('click', () => handleDontKnow(card));
-
-    const know = document.createElement('button');
-    know.type = 'button';
-    know.className = 'know-button';
-    know.textContent = '分かった 👍';
-    know.addEventListener('click', () => handleKnow(card));
-
-    knowActions.append(dontKnow, know);
-    cardEl.appendChild(knowActions);
+  const backWrap = document.createElement('div');
+  backWrap.className = 'back-entries';
+  if (!card.back.length) {
+    backWrap.appendChild(buildEmptyState('裏が未登録です。編集から追加してください。'));
+  } else {
+    card.back.forEach((entry) => backWrap.appendChild(buildBackEntry(entry)));
   }
+  backFace.appendChild(backWrap);
+
+  if (card.tags?.length) {
+    const tagGroup = document.createElement('div');
+    tagGroup.className = 'tag-group';
+    card.tags.forEach((tag) => {
+      const chip = document.createElement('span');
+      chip.className = 'tag-chip';
+      chip.textContent = `#${tag}`;
+      tagGroup.appendChild(chip);
+    });
+    backFace.appendChild(tagGroup);
+  }
+
+  if (card.memo) {
+    const memo = document.createElement('div');
+    memo.className = 'memo-block';
+    memo.textContent = card.memo;
+    backFace.appendChild(memo);
+  }
+
+  const actions = document.createElement('div');
+  actions.className = 'face-actions';
+
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'danger-action';
+  remove.textContent = '削除';
+  remove.addEventListener('click', () => deleteVocabularyCard(card));
+
+  const edit = document.createElement('button');
+  edit.type = 'button';
+  edit.className = 'ghost-action';
+  edit.textContent = '編集';
+  edit.addEventListener('click', () => openVocabularyEditor(card));
+
+  actions.append(remove, edit);
+
+  if (card.fromPostId) {
+    const link = document.createElement('button');
+    link.type = 'button';
+    link.className = 'ghost-action';
+    link.textContent = 'SNS投稿を開く';
+    link.addEventListener('click', () => jumpToPost(card.fromPostId, card.frontSource?.textIndex || 0));
+    actions.appendChild(link);
+  }
+
+  backFace.appendChild(actions);
+
+  const knowActions = document.createElement('div');
+  knowActions.className = 'know-actions';
+
+  const dontKnow = document.createElement('button');
+  dontKnow.type = 'button';
+  dontKnow.className = 'dontknow-button';
+  dontKnow.textContent = '分からなかった 👎';
+  dontKnow.addEventListener('click', () => handleDontKnow(card));
+
+  const know = document.createElement('button');
+  know.type = 'button';
+  know.className = 'know-button';
+  know.textContent = '分かった 👍';
+  know.addEventListener('click', () => handleKnow(card));
+
+  knowActions.append(dontKnow, know);
+  backFace.appendChild(knowActions);
+
+  inner.append(frontFace, backFace);
+  cardEl.classList.toggle('is-flipped', !vocabularyReviewState.showFront);
+  updateToggleText();
 
   return cardEl;
 }
