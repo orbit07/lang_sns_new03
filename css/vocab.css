@@ -71,7 +71,7 @@
 
 .vocabulary-tab-panel {
   display: none;
-  padding: 46px 0 0;
+  padding: 46px 10px 0;
 }
 
 .vocabulary-tab-panel.active {
@@ -259,11 +259,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  display: grid;
   gap: 12px;
   width: 100%;
-  min-height: 360px;
-  height: 100%;
   padding: 18px;
   font-weight: 600;
   color: #334e68;
@@ -284,9 +281,11 @@
 
 .cardface__back {
   transform: rotateY(180deg);
-  color: #262626;
-  background-color: #f7f9fc;
+  display: flex;
+  flex-direction: column;
 }
+
+
 
 .vocabulary-review-card .face-header {
   display: flex;
@@ -330,12 +329,11 @@
 
 .vocabulary-review-card .back-entry {
   padding: 10px;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #f7f9fc;
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 6px 10px;
-  align-items: center;
+  grid-template-columns: auto;
+  gap: 20px;
 }
 
 .vocabulary-review-card .back-entry-main {
@@ -418,10 +416,9 @@
 }
 
 .vocabulary-review-card .face-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 10px;
 }
 
 .vocabulary-review-card .primary-action {
@@ -433,36 +430,17 @@
   cursor: pointer;
 }
 
-.vocabulary-review-card .ghost-action {
-  background: #fff;
-  color: #1f7aee;
-  border: 1px solid #d7dbe4;
-  padding: 10px 12px;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-.vocabulary-review-card .danger-action {
-  background: #fff5f5;
-  color: #d64545;
-  border: 1px solid #f1c0c0;
-  padding: 10px 12px;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
 .vocabulary-review-card .know-actions {
   display: flex;
   gap: 10px;
-  justify-content: flex-end;
-  flex-wrap: wrap;
 }
 
 .vocabulary-review-card .know-button,
 .vocabulary-review-card .dontknow-button {
+  text-align: center;
   flex: 1 1 160px;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: 9999px;
   border: none;
   color: #fff;
   cursor: pointer;

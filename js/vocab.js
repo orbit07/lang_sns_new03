@@ -921,13 +921,13 @@ function renderTodayReviewCard(card) {
   const remove = document.createElement('button');
   remove.type = 'button';
   remove.className = 'danger-action';
-  remove.textContent = '削除';
+  remove.innerHTML = '<img src="img/delete.svg" alt="削除" width="20" class="icon-inline">';
   remove.addEventListener('click', () => deleteVocabularyCard(card));
 
   const edit = document.createElement('button');
   edit.type = 'button';
   edit.className = 'ghost-action';
-  edit.textContent = '編集';
+  edit.innerHTML = '<img src="img/edit.svg" alt="編集" width="20" class="icon-inline">';
   edit.addEventListener('click', () => openVocabularyEditor(card));
 
   actions.append(remove, edit);
@@ -936,7 +936,7 @@ function renderTodayReviewCard(card) {
     const link = document.createElement('button');
     link.type = 'button';
     link.className = 'ghost-action';
-    link.textContent = 'SNS投稿を開く';
+    link.innerHTML = '<img src="img/all_off.svg" alt="投稿を開く" width="20" class="icon-inline">';
     link.addEventListener('click', () => jumpToPost(card.fromPostId, card.frontSource?.textIndex || 0));
     actions.appendChild(link);
   }
