@@ -930,8 +930,6 @@ function renderTodayReviewCard(card) {
   const actions = document.createElement('div');
   actions.className = 'face-actions';
 
-  actions.append(dontKnow, know);
-
   const remove = document.createElement('button');
   remove.type = 'button';
   remove.className = 'danger-action';
@@ -954,6 +952,8 @@ function renderTodayReviewCard(card) {
     link.addEventListener('click', () => jumpToPost(card.fromPostId, card.frontSource?.textIndex || 0));
     actions.appendChild(link);
   }
+
+  actions.append(dontKnow, know);
 
   backFace.appendChild(actions);
 
