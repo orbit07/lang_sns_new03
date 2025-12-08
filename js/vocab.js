@@ -726,10 +726,6 @@ function buildBackEntry(entry) {
 
   const meta = document.createElement('div');
   meta.className = 'back-meta';
-  const lang = document.createElement('span');
-  lang.className = 'text-label';
-  lang.textContent = getLanguageLabel(entry.language);
-  meta.appendChild(lang);
 
   meta.appendChild(createSpeakerBadge(entry.speaker || 'none'));
 
@@ -825,11 +821,6 @@ function renderTodayReviewCard(card) {
 
   const faceMeta = document.createElement('div');
   faceMeta.className = 'face-meta';
-
-  const lang = document.createElement('span');
-  lang.className = 'text-label';
-  lang.textContent = getLanguageLabel(card.frontLanguage) || '未設定';
-  faceMeta.append(lang);
 
   faceMeta.append(createSpeakerBadge(card.frontSpeaker || 'none'));
   faceMeta.append(createSpeechButton(card.front, card.frontLanguage));
